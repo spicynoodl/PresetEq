@@ -1,0 +1,21 @@
+name: Build unsigned IPA
+on: [workflow_dispatch, push]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Build
+        run: |
+          xcodebuild -project PresetEQ.xcodeproj -scheme PresetEQ \
+            -configuration Release -sdk iphoneos -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/PresetEQ.app Payload/
+          zip -r PresetEQ.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PresetEQ-ipa
+          path: PresetEQ.ipa
